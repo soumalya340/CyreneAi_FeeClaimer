@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
-import { FeeClaimer } from "../utils/feeClaimer";
+import { FeeClaimerClient } from "../utils/feeClaimerClient";
 
 interface PoolInfo {
   publicKey: PublicKey;
@@ -70,7 +70,7 @@ export default function Home() {
     setFeeMetrics(null);
 
     try {
-      const feeClaimer = new FeeClaimer(connection);
+      const feeClaimer = new FeeClaimerClient(connection);
 
       const pool = await feeClaimer.getPoolByBaseMint(trimmedAddress);
       setPoolInfo(pool);
@@ -97,7 +97,7 @@ export default function Home() {
     setSuccessMessage(null);
 
     try {
-      const feeClaimer = new FeeClaimer(connection);
+      const feeClaimer = new FeeClaimerClient(connection);
       const metrics = await feeClaimer.getPoolFeeMetrics(
         poolInfo.publicKey.toString()
       );
@@ -125,7 +125,7 @@ export default function Home() {
     setSuccessMessage(null);
 
     try {
-      const feeClaimer = new FeeClaimer(connection);
+      const feeClaimer = new FeeClaimerClient(connection);
 
       const wallet = {
         publicKey,
