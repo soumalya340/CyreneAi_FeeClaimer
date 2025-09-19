@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meteora DBC Fee Claimer
 
-## Getting Started
+A single-page web application for tracking and claiming fees from Meteora Dynamic Bonding Curve (DBC) pools.
 
-First, run the development server:
+## Features
+
+- **Wallet Connection**: Connect with Phantom, Solflare, or Torus wallets
+- **Fee Tracking**: View unclaimed fees for your token pools
+- **Fee Claiming**: Claim partner trading fees from your pools
+- **Real-time Updates**: Refresh fee data to see current amounts
+- **Transaction History**: View transaction signatures and links to Solscan
+
+## How to Use
+
+1. **Connect Your Wallet**: Click the wallet connection button and connect with your preferred Solana wallet
+
+2. **Enter Token Address**: Input the base mint address of your token that was launched on Meteora DBC
+
+3. **Track Fees**: Click "Track Fees" to view your pool information and current unclaimed fees
+
+4. **Claim Fees**: If you have unclaimed fees, click "Claim Fees" to claim them (requires wallet signature)
+
+5. **Monitor**: Use the "Refresh" button to update fee information
+
+## Technical Details
+
+- Built with Next.js 15 and React 19
+- Uses Solana Web3.js for blockchain interactions
+- Integrates with Meteora DBC SDK
+- Supports multiple wallet adapters
+- Responsive design with dark mode support
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application uses the following environment variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `PRIVATE_KEY`: Your wallet's private key (for server-side operations)
 
-## Learn More
+**Note**: For production use, implement proper wallet integration without exposing private keys.
 
-To learn more about Next.js, take a look at the following resources:
+## Supported Wallets
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Phantom
+- Solflare
+- Torus
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Network
 
-## Deploy on Vercel
+Currently configured for Solana Mainnet using Helius RPC.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
