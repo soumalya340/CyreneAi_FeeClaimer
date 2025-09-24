@@ -1,36 +1,99 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Output configuration for static export
+  output: 'standalone',
+
+  // Server external packages for edge runtime compatibility
   serverExternalPackages: [
     "@solana/web3.js",
     "@meteora-ag/dynamic-bonding-curve-sdk",
     "bn.js",
+    "bs58",
   ],
-  webpack: (config, { isServer }) => {
+
+  experimental: {
+    // Enable experimental features if needed
+  },
+
+  webpack: (config, { isServer, dev }) => {
+    // Server-side externals
     if (isServer) {
       config.externals.push(
         "@solana/web3.js",
         "@meteora-ag/dynamic-bonding-curve-sdk",
-        "bn.js"
+        "bn.js",
+        "bs58"
       );
     }
 
-    // Reduce bundle size by excluding unnecessary modules
+    // Configure fallbacks for browser compatibility
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
       crypto: false,
+      stream: false,
+      url: false,
+      zlib: false,
+      http: false,
+      https: false,
+      assert: false,
+      os: false,
+      path: false,
+      'pino-pretty': false,
     };
+
+    // Optimize for production builds
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+              chunks: 'all',
+            },
+            solana: {
+              test: /[\\/]node_modules[\\/]@solana[\\/]/,
+              name: 'solana',
+              priority: 20,
+              chunks: 'all',
+            },
+          },
+        },
+      };
+    }
 
     return config;
   },
+
   // Enable compression
   compress: true,
+
   // Optimize images
   images: {
     unoptimized: true,
+    domains: [],
+  },
+
+  // Configure headers for better performance
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
 };
 

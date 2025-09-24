@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
-import { FeeClaimerClient } from "../utils/feeClaimerClient";
+import { FeeClaimer } from "../utils/feeClaimer";
+import NetsepioClaim from "../components/NetsepioClaim";
+import { useWalletAuth } from "../hooks/useWalletAuth";
 
 interface PoolInfo {
   publicKey: PublicKey;
@@ -29,6 +31,7 @@ interface FeeMetrics {
 export default function Home() {
   const { connection } = useConnection();
   const { publicKey, connected, signTransaction } = useWallet();
+  const { isWhitelisted, isConnected } = useWalletAuth();
   const [tokenAddress, setTokenAddress] = useState("");
   const [poolInfo, setPoolInfo] = useState<PoolInfo | null>(null);
   const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null);
@@ -39,10 +42,28 @@ export default function Home() {
     string | null
   >(null);
   const [mounted, setMounted] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isConnected && isWhitelisted) {
+      setHasAccess(true);
+    } else {
+      setHasAccess(false);
+    }
+  }, [isConnected, isWhitelisted]);
+
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+  };
+
+  // Show login screen if not authenticated
+  if (!hasAccess) {
+    return <NetsepioClaim onAccessGranted={handleAccessGranted} />;
+  }
 
   const validateTokenAddress = (address: string): boolean => {
     // Basic validation for Solana address format
@@ -70,7 +91,7 @@ export default function Home() {
     setFeeMetrics(null);
 
     try {
-      const feeClaimer = new FeeClaimerClient(connection);
+      const feeClaimer = new FeeClaimer(connection);
 
       const pool = await feeClaimer.getPoolByBaseMint(trimmedAddress);
       setPoolInfo(pool);
@@ -97,7 +118,7 @@ export default function Home() {
     setSuccessMessage(null);
 
     try {
-      const feeClaimer = new FeeClaimerClient(connection);
+      const feeClaimer = new FeeClaimer(connection);
       const metrics = await feeClaimer.getPoolFeeMetrics(
         poolInfo.publicKey.toString()
       );
@@ -125,7 +146,7 @@ export default function Home() {
     setSuccessMessage(null);
 
     try {
-      const feeClaimer = new FeeClaimerClient(connection);
+      const feeClaimer = new FeeClaimer(connection);
 
       const wallet = {
         publicKey,
