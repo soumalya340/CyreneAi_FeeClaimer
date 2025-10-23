@@ -5,8 +5,6 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import { FeeClaimer } from "../utils/feeClaimer";
-import NetsepioClaim from "../components/NetsepioClaim";
-import { useWalletAuth } from "../hooks/useWalletAuth";
 
 interface PoolInfo {
   publicKey: PublicKey;
@@ -31,7 +29,6 @@ interface FeeMetrics {
 export default function Home() {
   const { connection } = useConnection();
   const { publicKey, connected, signTransaction } = useWallet();
-  const { isWhitelisted, isConnected } = useWalletAuth();
   const [tokenAddress, setTokenAddress] = useState("");
   const [poolInfo, setPoolInfo] = useState<PoolInfo | null>(null);
   const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null);
@@ -42,28 +39,10 @@ export default function Home() {
     string | null
   >(null);
   const [mounted, setMounted] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (isConnected && isWhitelisted) {
-      setHasAccess(true);
-    } else {
-      setHasAccess(false);
-    }
-  }, [isConnected, isWhitelisted]);
-
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-  };
-
-  // Show login screen if not authenticated
-  if (!hasAccess) {
-    return <NetsepioClaim onAccessGranted={handleAccessGranted} />;
-  }
 
   const validateTokenAddress = (address: string): boolean => {
     // Basic validation for Solana address format
@@ -130,7 +109,7 @@ export default function Home() {
     }
   };
 
-  const handleClaimFees = async () => {
+  const handleClaimPartnerFees = async () => {
     if (!poolInfo || !publicKey || !connected) {
       setError("Please connect wallet and track fees first");
       return;
@@ -160,7 +139,7 @@ export default function Home() {
       );
 
       setTransactionSignature(signature);
-      setSuccessMessage("Fees claimed successfully!");
+      setSuccessMessage("Partner fees claimed successfully!");
 
       // Refresh the fee metrics
       const metrics = await feeClaimer.getPoolFeeMetrics(
@@ -168,7 +147,52 @@ export default function Home() {
       );
       setFeeMetrics(metrics);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to claim fees");
+      setError(err instanceof Error ? err.message : "Failed to claim partner fees");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClaimCreatorFees = async () => {
+    if (!poolInfo || !publicKey || !connected) {
+      setError("Please connect wallet and track fees first");
+      return;
+    }
+
+    if (!signTransaction) {
+      setError("Wallet does not support transaction signing");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const feeClaimer = new FeeClaimer(connection);
+
+      const wallet = {
+        publicKey,
+        signTransaction,
+      };
+
+      const signature = await feeClaimer.claimCreatorTradingFee(
+        poolInfo.publicKey.toString(),
+        wallet,
+        feeMetrics?.current.creatorBaseFee,
+        feeMetrics?.current.creatorQuoteFee
+      );
+
+      setTransactionSignature(signature);
+      setSuccessMessage("Creator fees claimed successfully!");
+
+      // Refresh the fee metrics
+      const metrics = await feeClaimer.getPoolFeeMetrics(
+        poolInfo.publicKey.toString()
+      );
+      setFeeMetrics(metrics);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to claim creator fees");
     } finally {
       setLoading(false);
     }
@@ -408,97 +432,134 @@ export default function Home() {
           )}
 
           {feeMetrics && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  Unclaimed Fees
-                </h2>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleRefreshFees}
-                    disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                  >
-                    {loading ? "Loading..." : "Refresh"}
-                  </button>
-                  {connected && (
+            <>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      Partner Fees
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Fees available for partner/launchpad to claim
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
                     <button
-                      onClick={handleClaimFees}
+                      onClick={handleRefreshFees}
                       disabled={loading}
-                      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                      className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                     >
-                      {loading ? "Claiming..." : "Claim Fees"}
+                      {loading ? "Loading..." : "Refresh"}
                     </button>
-                  )}
+                    {connected && (
+                      <button
+                        onClick={handleClaimPartnerFees}
+                        disabled={loading}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                      >
+                        {loading ? "Claiming..." : "Claim Partner Fees"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Current Fees
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Partner Base Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.current.partnerBaseFee}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Partner Quote Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.current.partnerQuoteFee}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      Creator Fees
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Fees available for pool creator to claim
+                    </p>
+                  </div>
+                  {connected && (
+                    <button
+                      onClick={handleClaimCreatorFees}
+                      disabled={loading}
+                      className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                    >
+                      {loading ? "Claiming..." : "Claim Creator Fees"}
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Creator Base Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.current.creatorBaseFee}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                  </div>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Creator Quote Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.current.creatorQuoteFee}
                       </span>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Total Trading Fees
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+                  Total Trading Fees
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Total Base Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.total.totalTradingBaseFee}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600 dark:text-gray-400">
                         Total Quote Fee:
                       </span>
-                      <span className="text-gray-900 dark:text-white font-mono">
+                      <span className="text-gray-900 dark:text-white font-mono font-semibold">
                         {feeMetrics.total.totalTradingQuoteFee}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

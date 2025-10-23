@@ -91,6 +91,81 @@ export class FeeClaimer {
     }
   }
 
+  async claimCreatorTradingFee(
+    poolAddress: string,
+    wallet: WalletAdapter,
+    maxBaseAmount?: string,
+    maxQuoteAmount?: string,
+    receiver?: PublicKey | null,
+    tempWSolAcc?: PublicKey | null
+  ): Promise<string> {
+    if (!wallet.publicKey) {
+      throw new Error("Wallet not connected");
+    }
+
+    if (!wallet.signTransaction) {
+      throw new Error("Wallet does not support transaction signing");
+    }
+
+    try {
+      const poolPublicKey = new PublicKey(poolAddress);
+
+      console.log("Claiming Creator Trading Fee...");
+      console.log("Pool:", poolPublicKey.toString());
+      console.log("Creator:", wallet.publicKey.toString());
+      console.log("Payer:", wallet.publicKey.toString());
+
+      // Use the provided amounts or default to 1 SOL for quote, 0 for base
+      const baseAmount = maxBaseAmount ? new BN(maxBaseAmount) : new BN(0);
+      const quoteAmount = maxQuoteAmount
+        ? new BN(maxQuoteAmount)
+        : new BN(1000000000);
+
+      const transaction = await this.client.creator.claimCreatorTradingFee({
+        creator: wallet.publicKey,
+        payer: wallet.publicKey,
+        pool: poolPublicKey,
+        maxBaseAmount: baseAmount,
+        maxQuoteAmount: quoteAmount,
+        receiver: receiver || undefined,
+        tempWSolAcc: tempWSolAcc || undefined,
+      });
+
+      console.log("Transaction created...");
+
+      // Get latest blockhash
+      const { blockhash } = await this.connection.getLatestBlockhash(
+        "confirmed"
+      );
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = wallet.publicKey;
+
+      // Sign the transaction with the wallet
+      const signedTransaction = await wallet.signTransaction(transaction);
+
+      // Send and confirm the transaction
+      const signature = await sendAndConfirmRawTransaction(
+        this.connection,
+        signedTransaction.serialize(),
+        { commitment: "confirmed" }
+      );
+
+      console.log("Claim creator fee successfully!");
+      console.log(
+        `Transaction: https://solscan.io/tx/${signature}?cluster=mainnet`
+      );
+
+      return signature;
+    } catch (error) {
+      console.error("Failed to claim creator fee:", error);
+      throw new Error(
+        `Failed to claim creator fees: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
   async getPoolByBaseMint(baseMintAddress: string): Promise<{
     publicKey: PublicKey;
     account: {
