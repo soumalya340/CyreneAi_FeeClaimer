@@ -16,7 +16,7 @@ export interface WalletAdapter {
 export interface PositionInfo {
   positionNftAccount: PublicKey;
   position: PublicKey;
-  positionState: any; // PositionState from SDK
+  positionState: unknown; // PositionState from SDK
   poolInfo?: {
     poolAddress: PublicKey;
     tokenAMint: PublicKey;
@@ -250,41 +250,41 @@ export class DammV2Manager {
    * Tries multiple method name variations to find the correct SDK method
    */
   private calculateUnclaimedFees(
-    poolState: any,
-    positionState: any
+    poolState: unknown,
+    positionState: unknown
   ): {
     feeTokenA: { toString: () => string };
     feeTokenB: { toString: () => string };
   } {
     try {
       // Try different method name variations
-      if (typeof (this.cpAmm as any).getUnClaimLpFee === "function") {
-        return (this.cpAmm as any).getUnClaimLpFee(poolState, positionState);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cpAmmAny = this.cpAmm as any;
+      if (typeof cpAmmAny.getUnClaimLpFee === "function") {
+        return cpAmmAny.getUnClaimLpFee(poolState, positionState);
       }
-      if (typeof (this.cpAmm as any).getUnclaimedLpFee === "function") {
-        return (this.cpAmm as any).getUnclaimedLpFee(poolState, positionState);
+      if (typeof cpAmmAny.getUnclaimedLpFee === "function") {
+        return cpAmmAny.getUnclaimedLpFee(poolState, positionState);
       }
-      if (typeof (this.cpAmm as any).calculateUnclaimedFees === "function") {
-        return (this.cpAmm as any).calculateUnclaimedFees(
-          poolState,
-          positionState
-        );
+      if (typeof cpAmmAny.calculateUnclaimedFees === "function") {
+        return cpAmmAny.calculateUnclaimedFees(poolState, positionState);
       }
-      if (typeof (this.cpAmm as any).getUnclaimedFees === "function") {
-        return (this.cpAmm as any).getUnclaimedFees(poolState, positionState);
+      if (typeof cpAmmAny.getUnclaimedFees === "function") {
+        return cpAmmAny.getUnclaimedFees(poolState, positionState);
       }
 
       // If no method found, try to access from position state directly
+      const positionStateObj = positionState as Record<string, unknown>;
       if (
-        positionState?.unclaimedFeeTokenA !== undefined &&
-        positionState?.unclaimedFeeTokenB !== undefined
+        positionStateObj?.unclaimedFeeTokenA !== undefined &&
+        positionStateObj?.unclaimedFeeTokenB !== undefined
       ) {
         return {
           feeTokenA: {
-            toString: () => positionState.unclaimedFeeTokenA.toString(),
+            toString: () => String(positionStateObj.unclaimedFeeTokenA),
           },
           feeTokenB: {
-            toString: () => positionState.unclaimedFeeTokenB.toString(),
+            toString: () => String(positionStateObj.unclaimedFeeTokenB),
           },
         };
       }
@@ -310,9 +310,12 @@ export class DammV2Manager {
   /**
    * Format liquidity value for display
    */
-  formatLiquidity(liquidity: any): string {
+  formatLiquidity(liquidity: unknown): string {
     try {
-      return liquidity.toString();
+      if (liquidity === null || liquidity === undefined) {
+        return "0";
+      }
+      return String(liquidity);
     } catch {
       return "0";
     }

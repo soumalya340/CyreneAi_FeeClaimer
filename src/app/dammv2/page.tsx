@@ -342,7 +342,7 @@ export default function DammV2Page() {
               <path d="M24 36V20" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
             <h2 className="text-xl font-bold text-gray-500 dark:text-gray-400 mb-2">No Positions Found</h2>
-            <p className="text-gray-400 dark:text-gray-600 text-sm">You don't have any DAMM v2 positions in this wallet.</p>
+            <p className="text-gray-400 dark:text-gray-600 text-sm">You don&apos;t have any DAMM v2 positions in this wallet.</p>
           </div>
          )}
        </div>
