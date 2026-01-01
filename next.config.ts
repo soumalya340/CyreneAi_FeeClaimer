@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
     // Enable experimental features if needed
   },
 
+  // Turbopack configuration (empty for now, using webpack for builds)
+  turbopack: {},
+
   webpack: (config, { isServer, dev }) => {
     // Server-side externals
     if (isServer) {
