@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 const navItems = [
   { href: "/", label: "DBC" },
   { href: "/dammv2", label: "DammV2" },
+  { href: "/splitPosition", label: "Split Position" },
 ] as const;
 
 export default function Navbar() {
@@ -25,18 +26,14 @@ export default function Navbar() {
         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
     }`;
 
-  // During SSR and initial render, don't mark any link as active
-  // Only use pathname after mount to ensure SSR/client match
-  const currentPathname = mounted ? pathname : null;
-
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16">
           <div className="flex items-center gap-6">
             {navItems.map(({ href, label }) => {
-              // Only check if active after component has mounted
-              const isActive = mounted && currentPathname === href;
+              // Only check if active after component has mounted to avoid hydration mismatch
+              const isActive = mounted && pathname === href;
               return (
                 <Link
                   key={href}
