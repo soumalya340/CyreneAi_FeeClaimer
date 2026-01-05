@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Output configuration for static export
-  output: 'standalone',
+  output: "standalone",
 
   // Server external packages for edge runtime compatibility
   serverExternalPackages: [
@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     "@meteora-ag/dynamic-bonding-curve-sdk",
     "bn.js",
     "bs58",
+    "jito-ts",
+    "@grpc/grpc-js",
   ],
 
   experimental: {
@@ -45,7 +47,8 @@ const nextConfig: NextConfig = {
       assert: false,
       os: false,
       path: false,
-      'pino-pretty': false,
+      dns: false,
+      "pino-pretty": false,
     };
 
     // Optimize for production builds
@@ -53,19 +56,19 @@ const nextConfig: NextConfig = {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
-          chunks: 'all',
+          chunks: "all",
           cacheGroups: {
             vendor: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
+              name: "vendors",
               priority: 10,
-              chunks: 'all',
+              chunks: "all",
             },
             solana: {
               test: /[\\/]node_modules[\\/]@solana[\\/]/,
-              name: 'solana',
+              name: "solana",
               priority: 20,
-              chunks: 'all',
+              chunks: "all",
             },
           },
         },
@@ -88,11 +91,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },

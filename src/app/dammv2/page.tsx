@@ -6,23 +6,37 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { DammV2Manager, PositionInfo } from "../../utils/dammv2Manager";
 
 // --- Sub-Component: Individual Position Card ---
-const PositionCard = ({ 
-  position, 
-  index, 
-  onClaim, 
-  isClaiming 
-}: { 
-  position: PositionInfo, 
-  index: number, 
-  onClaim: (p: PositionInfo) => void, 
-  isClaiming: boolean 
+const PositionCard = ({
+  position,
+  index,
+  onClaim,
+  isClaiming,
+}: {
+  position: PositionInfo;
+  index: number;
+  onClaim: (p: PositionInfo) => void;
+  isClaiming: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const formatAddress = (address: string) => `${address.slice(0, 6)}...${address.slice(-6)}`;
+  const formatAddress = (address: string) =>
+    `${address.slice(0, 6)}...${address.slice(-6)}`;
+
+  const handleCopyAddress = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent clicking from closing the accordion
+    const address = position.position.toString();
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy address:", err);
+    }
+  };
 
   // Helper for data rows
-  const DataRow = ({ label, value }: { label: string, value: string }) => (
+  const DataRow = ({ label, value }: { label: string; value: string }) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
       <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
       <span className="font-mono text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-900/50 px-2 py-0.5 rounded">
@@ -33,34 +47,86 @@ const PositionCard = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 hover:shadow-lg">
-      
       {/* Clickable Header */}
-      <div 
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
         className="cursor-pointer p-5 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${
-            isExpanded 
-              ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" 
-              : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-          }`}>
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${
+              isExpanded
+                ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+            }`}
+          >
             {index + 1}
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white">
               Position #{index + 1}
             </h3>
-            <p className="text-xs font-mono text-gray-500 dark:text-gray-400">
-              ID: {formatAddress(position.position.toString())}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 break-all">
+                {position.position.toString()}
+              </p>
+              <button
+                onClick={handleCopyAddress}
+                className="flex-shrink-0 p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group"
+                title={copied ? "Copied!" : "Copy address"}
+              >
+                {copied ? (
+                  <svg
+                    className="w-4 h-4 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Chevron Icon */}
-        <div className={`transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}>
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <div
+          className={`transform transition-transform duration-300 ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        >
+          <svg
+            className="w-6 h-6 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </div>
       </div>
@@ -69,7 +135,6 @@ const PositionCard = ({
       {isExpanded && (
         <div className="p-6 border-t border-gray-100 dark:border-gray-700 animate-fadeIn">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
             {/* Left Col: Pool Info */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
@@ -78,10 +143,30 @@ const PositionCard = ({
               <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
                 {position.poolInfo && (
                   <>
-                    <DataRow label="Pool Address" value={formatAddress(position.poolInfo.poolAddress.toString())} />
-                    <DataRow label="Token A Mint" value={formatAddress(position.poolInfo.tokenAMint.toString())} />
-                    <DataRow label="Token B Mint" value={formatAddress(position.poolInfo.tokenBMint.toString())} />
-                    <DataRow label="NFT Account" value={formatAddress(position.positionNftAccount.toString())} />
+                    <DataRow
+                      label="Pool Address"
+                      value={formatAddress(
+                        position.poolInfo.poolAddress.toString()
+                      )}
+                    />
+                    <DataRow
+                      label="Token A Mint"
+                      value={formatAddress(
+                        position.poolInfo.tokenAMint.toString()
+                      )}
+                    />
+                    <DataRow
+                      label="Token B Mint"
+                      value={formatAddress(
+                        position.poolInfo.tokenBMint.toString()
+                      )}
+                    />
+                    <DataRow
+                      label="NFT Account"
+                      value={formatAddress(
+                        position.positionNftAccount.toString()
+                      )}
+                    />
                   </>
                 )}
               </div>
@@ -95,13 +180,17 @@ const PositionCard = ({
                 </h4>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-3 text-center">
-                    <div className="text-xs text-green-600 dark:text-green-400 mb-1">Token A</div>
+                    <div className="text-xs text-green-600 dark:text-green-400 mb-1">
+                      Token A
+                    </div>
                     <div className="font-mono font-bold text-gray-800 dark:text-gray-100 truncate">
                       {position.unclaimedFees?.feeTokenA || "0"}
                     </div>
                   </div>
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl p-3 text-center">
-                    <div className="text-xs text-green-600 dark:text-green-400 mb-1">Token B</div>
+                    <div className="text-xs text-green-600 dark:text-green-400 mb-1">
+                      Token B
+                    </div>
                     <div className="font-mono font-bold text-gray-800 dark:text-gray-100 truncate">
                       {position.unclaimedFees?.feeTokenB || "0"}
                     </div>
@@ -116,15 +205,32 @@ const PositionCard = ({
                 }}
                 disabled={
                   isClaiming ||
-                  (position.unclaimedFees?.feeTokenA === "0" && position.unclaimedFees?.feeTokenB === "0")
+                  (position.unclaimedFees?.feeTokenA === "0" &&
+                    position.unclaimedFees?.feeTokenB === "0")
                 }
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-700 dark:disabled:to-gray-800 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2"
               >
                 {isClaiming ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </>
@@ -140,7 +246,6 @@ const PositionCard = ({
   );
 };
 
-
 // --- Main Page Component ---
 
 export default function DammV2Page() {
@@ -150,7 +255,9 @@ export default function DammV2Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [transactionSignature, setTransactionSignature] = useState<string | null>(null);
+  const [transactionSignature, setTransactionSignature] = useState<
+    string | null
+  >(null);
   const [claimingPosition, setClaimingPosition] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -209,7 +316,11 @@ export default function DammV2Page() {
       const wallet = { publicKey, signTransaction };
       const signature = await manager.claimPositionFee(position, wallet);
       setTransactionSignature(signature);
-      setSuccessMessage(`Fees claimed successfully for position ${position.position.toString().slice(0, 8)}...`);
+      setSuccessMessage(
+        `Fees claimed successfully for position ${position.position
+          .toString()
+          .slice(0, 8)}...`
+      );
       await handleLoadPositions();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to claim fees");
@@ -225,15 +336,35 @@ export default function DammV2Page() {
           <header className="relative text-center space-y-4 pb-6">
             <div className="flex justify-center">
               <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-500 shadow-lg mb-2">
-                <svg className="w-9 h-9 text-white" fill="none" viewBox="0 0 32 32" stroke="currentColor">
-                  <circle cx="16" cy="16" r="14" strokeWidth="2" className="opacity-40" />
-                  <path d="M10 18l4-4 4 4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  className="w-9 h-9 text-white"
+                  fill="none"
+                  viewBox="0 0 32 32"
+                  stroke="currentColor"
+                >
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="14"
+                    strokeWidth="2"
+                    className="opacity-40"
+                  />
+                  <path
+                    d="M10 18l4-4 4 4"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                   <path d="M16 22V14" strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
               </span>
             </div>
-            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">My DAMM v2 Positions</h1>
-            <p className="text-lg text-gray-500 dark:text-gray-400">Expand a position to view details and claim your rewards.</p>
+            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
+              My DAMM v2 Positions
+            </h1>
+            <p className="text-lg text-gray-500 dark:text-gray-400">
+              Expand a position to view details and claim your rewards.
+            </p>
           </header>
         </div>
       </div>
@@ -247,15 +378,35 @@ export default function DammV2Page() {
         <header className="relative text-center space-y-4 pb-6">
           <div className="flex justify-center">
             <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-500 shadow-lg mb-2">
-              <svg className="w-9 h-9 text-white" fill="none" viewBox="0 0 32 32" stroke="currentColor">
-                <circle cx="16" cy="16" r="14" strokeWidth="2" className="opacity-40" />
-                <path d="M10 18l4-4 4 4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                className="w-9 h-9 text-white"
+                fill="none"
+                viewBox="0 0 32 32"
+                stroke="currentColor"
+              >
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="14"
+                  strokeWidth="2"
+                  className="opacity-40"
+                />
+                <path
+                  d="M10 18l4-4 4 4"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 <path d="M16 22V14" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
             </span>
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">My DAMM v2 Positions</h1>
-          <p className="text-lg text-gray-500 dark:text-gray-400">Expand a position to view details and claim your rewards.</p>
+          <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
+            My DAMM v2 Positions
+          </h1>
+          <p className="text-lg text-gray-500 dark:text-gray-400">
+            Expand a position to view details and claim your rewards.
+          </p>
         </header>
 
         {/* Action Bar */}
@@ -271,12 +422,16 @@ export default function DammV2Page() {
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex gap-3 shadow">
                 <span className="text-red-500">⚠</span>
-                <p className="text-red-700 dark:text-red-300 text-sm font-medium">{error}</p>
+                <p className="text-red-700 dark:text-red-300 text-sm font-medium">
+                  {error}
+                </p>
               </div>
             )}
             {successMessage && (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 shadow">
-                <p className="text-green-800 dark:text-green-200 font-medium text-sm text-center">{successMessage}</p>
+                <p className="text-green-800 dark:text-green-200 font-medium text-sm text-center">
+                  {successMessage}
+                </p>
                 {transactionSignature && (
                   <div className="text-center mt-2">
                     <a
@@ -299,11 +454,22 @@ export default function DammV2Page() {
           <div className="flex justify-center py-12">
             <div className="flex flex-col items-center gap-3">
               <div className="flex space-x-2">
-                <div className="h-4 w-4 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="h-4 w-4 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="h-4 w-4 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div
+                  className="h-4 w-4 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></div>
+                <div
+                  className="h-4 w-4 bg-indigo-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></div>
+                <div
+                  className="h-4 w-4 bg-purple-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></div>
               </div>
-              <span className="text-gray-600 dark:text-gray-300 text-base mt-2">Loading positions...</span>
+              <span className="text-gray-600 dark:text-gray-300 text-base mt-2">
+                Loading positions...
+              </span>
             </div>
           </div>
         )}
@@ -313,9 +479,15 @@ export default function DammV2Page() {
           <div className="space-y-6">
             <div className="flex items-center justify-between px-1 pb-1">
               <span className="text-base font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                Active Positions <span className="ml-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs font-bold">{positions.length}</span>
+                Active Positions{" "}
+                <span className="ml-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs font-bold">
+                  {positions.length}
+                </span>
               </span>
-              <button onClick={handleLoadPositions} className="text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all px-2 py-1">
+              <button
+                onClick={handleLoadPositions}
+                className="text-blue-600 dark:text-blue-400 text-sm font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-all px-2 py-1"
+              >
                 Refresh
               </button>
             </div>
@@ -336,16 +508,36 @@ export default function DammV2Page() {
         {/* Empty State */}
         {!loading && connected && positions.length === 0 && !error && (
           <div className="flex flex-col items-center justify-center py-16">
-            <svg className="w-16 h-16 text-gray-300 dark:text-gray-700 mb-4" fill="none" viewBox="0 0 48 48" stroke="currentColor">
-              <circle cx="24" cy="24" r="22" strokeWidth="2" className="opacity-30" />
-              <path d="M16 28l8-8 8 8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              className="w-16 h-16 text-gray-300 dark:text-gray-700 mb-4"
+              fill="none"
+              viewBox="0 0 48 48"
+              stroke="currentColor"
+            >
+              <circle
+                cx="24"
+                cy="24"
+                r="22"
+                strokeWidth="2"
+                className="opacity-30"
+              />
+              <path
+                d="M16 28l8-8 8 8"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
               <path d="M24 36V20" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
-            <h2 className="text-xl font-bold text-gray-500 dark:text-gray-400 mb-2">No Positions Found</h2>
-            <p className="text-gray-400 dark:text-gray-600 text-sm">You don&apos;t have any DAMM v2 positions in this wallet.</p>
+            <h2 className="text-xl font-bold text-gray-500 dark:text-gray-400 mb-2">
+              No Positions Found
+            </h2>
+            <p className="text-gray-400 dark:text-gray-600 text-sm">
+              You don&apos;t have any DAMM v2 positions in this wallet.
+            </p>
           </div>
-         )}
-       </div>
-     </div>
-   );
- }
+        )}
+      </div>
+    </div>
+  );
+}

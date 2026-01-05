@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
-import { DammV2Manager } from "../../utils/splitPostion";
+import { DammV2Manager } from "../../utils/splitPosition";
 
 export default function SplitPositionPage() {
   const { connection } = useConnection();
@@ -14,13 +14,15 @@ export default function SplitPositionPage() {
   const [poolAddress, setPoolAddress] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
   const [splitPercentage, setSplitPercentage] = useState("");
-  
+
   // UI State
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [transactionSignature, setTransactionSignature] = useState<string | null>(null);
-  
+  const [transactionSignature, setTransactionSignature] = useState<
+    string | null
+  >(null);
+
   // Hydration fix: ensures client-only rendering for dynamic parts
   const [mounted, setMounted] = useState(false);
 
@@ -102,13 +104,16 @@ export default function SplitPositionPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
-          
           {/* Header & Wallet Section */}
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mb-8 border border-white/20">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Splitter</h1>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Divide and transfer pool positions</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Splitter
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Divide and transfer pool positions
+                </p>
               </div>
               <WalletMultiButton />
             </div>
@@ -194,9 +199,24 @@ export default function SplitPositionPage() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </>
@@ -214,7 +234,9 @@ export default function SplitPositionPage() {
 
               {successMessage && (
                 <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-2xl">
-                  <p className="text-green-700 dark:text-green-300 font-bold mb-2">🎉 {successMessage}</p>
+                  <p className="text-green-700 dark:text-green-300 font-bold mb-2">
+                    🎉 {successMessage}
+                  </p>
                   <a
                     href={`https://solscan.io/tx/${transactionSignature}`}
                     target="_blank"
