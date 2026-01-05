@@ -7,6 +7,15 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 
+// Lazy load jito-ts to avoid bundling issues (only load when needed, server-side only)
+let jitoCache: any = null;
+async function getJito() {
+  if (!jitoCache) {
+    jitoCache = await import("jito-ts");
+  }
+  return jitoCache;
+}
+
 // Dynamically import spl-token functions to avoid bundling issues
 const splToken = await import("@solana/spl-token");
 
@@ -171,8 +180,8 @@ export class DammV2Manager {
       console.log("  Recipient:", recipientAddress);
       console.log("  Split %:", splitPercent);
 
-      // Dynamically import jito-ts to avoid bundling issues (only load when needed)
-      const jito = await import("jito-ts");
+      // Lazy load jito-ts (server-side only)
+      const jito = await getJito();
       const { searcher, bundle } = jito;
 
       // Setup Jito client

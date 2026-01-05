@@ -30,6 +30,18 @@ const nextConfig: NextConfig = {
         "bn.js",
         "bs58"
       );
+    } else {
+      // Client-side: prevent bundling Node.js-only packages
+      config.externals = config.externals || [];
+      if (typeof config.externals === "undefined") {
+        config.externals = [];
+      }
+      if (Array.isArray(config.externals)) {
+        config.externals.push("jito-ts", "@grpc/grpc-js");
+      } else if (typeof config.externals === "object") {
+        config.externals["jito-ts"] = "commonjs jito-ts";
+        config.externals["@grpc/grpc-js"] = "commonjs @grpc/grpc-js";
+      }
     }
 
     // Configure fallbacks for browser compatibility
@@ -48,6 +60,11 @@ const nextConfig: NextConfig = {
       os: false,
       path: false,
       dns: false,
+      child_process: false,
+      util: false,
+      events: false,
+      buffer: false,
+      process: false,
       "pino-pretty": false,
     };
 
