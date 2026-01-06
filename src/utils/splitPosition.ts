@@ -16,11 +16,24 @@ async function getJito() {
   return jitoCache;
 }
 
-// Dynamically import spl-token functions to avoid bundling issues
-const splToken = await import("@solana/spl-token");
+// Lazy load spl-token to avoid bundling issues
+let splTokenCache: any = null;
+async function getSplToken() {
+  if (!splTokenCache) {
+    splTokenCache = await import("@solana/spl-token");
+  }
+  return splTokenCache;
+}
 
-// Dynamically import SPLIT_POSITION_DENOMINATOR to avoid bundling issues
-const { SPLIT_POSITION_DENOMINATOR } = await import("@meteora-ag/cp-amm-sdk");
+// Lazy load SPLIT_POSITION_DENOMINATOR to avoid bundling issues
+let splitPositionDenominatorCache: number = 10000;
+async function getSplitPositionDenominator() {
+  if (splitPositionDenominatorCache === 10000) {
+    const module = await import("@meteora-ag/cp-amm-sdk");
+    splitPositionDenominatorCache = module.SPLIT_POSITION_DENOMINATOR;
+  }
+  return splitPositionDenominatorCache;
+}
 
 // Token Program IDs - defined locally to avoid importing from @solana/spl-token
 // which can cause bundling issues with @coral-xyz/anchor
@@ -321,6 +334,7 @@ export class DammV2Manager {
         `\n📤 STEP 3: Splitting ${splitPercent}% to second position (same owner - 1 signature!)...`
       );
 
+      const SPLIT_POSITION_DENOMINATOR = await getSplitPositionDenominator();
       const numerator = Math.floor(
         (SPLIT_POSITION_DENOMINATOR * splitPercent) / 100
       );
@@ -361,6 +375,7 @@ export class DammV2Manager {
       console.log("\n📤 STEP 5: Checking/Creating Destination ATA...");
 
       // 1. Derive the destination Address using the CORRECT program
+      const splToken = await getSplToken();
       const destinationAta = await splToken.getAssociatedTokenAddress(
         nftMint,
         recipientPubkey,
