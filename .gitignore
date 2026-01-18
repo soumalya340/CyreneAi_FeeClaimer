@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# turbopack
+.turbo
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

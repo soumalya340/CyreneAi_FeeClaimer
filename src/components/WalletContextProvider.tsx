@@ -13,17 +13,14 @@ import {
 } from "@solana/wallet-adapter-wallets";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { useNetwork } from "../contexts/NetworkContext";
 
 interface Props {
   children: ReactNode;
 }
 
 const WalletContextProvider: FC<Props> = ({ children }) => {
-  const endpoint = useMemo(
-    () =>
-      "https://mainnet.helius-rpc.com/?api-key=7d2734a8-f8b4-4c00-ade1-4034d4d3eb75",
-    []
-  );
+  const { endpoint } = useNetwork();
 
   const wallets = useMemo(
     () => [

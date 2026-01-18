@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NetworkProvider } from "../contexts/NetworkContext";
 import WalletContextProvider from "../components/WalletContextProvider";
 import Navbar from "../components/Navbar";
 
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Meteora DBC Fee Claimer",
-  description: "Track and claim fees from Meteora Dynamic Bonding Curve pools",
+  title: "Solana DeFi Power Suite | Meteora Protocol",
+  description: "Advanced DeFi toolkit for Solana - Track, manage, and claim fees from Meteora Dynamic Bonding Curves, DAMM pools, and liquidity positions",
 };
 
 export default function RootLayout({
@@ -29,10 +30,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <WalletContextProvider>
-          <Navbar />
-          {children}
-        </WalletContextProvider>
+        <NetworkProvider>
+          <WalletContextProvider>
+            <Navbar />
+            {children}
+          </WalletContextProvider>
+        </NetworkProvider>
       </body>
     </html>
   );
